@@ -1,26 +1,35 @@
 pipeline {
     agent any
-    environment {
-        SONAR_TOKEN = credentials('sonar-token') // 'sonar-token' ही तुम्ही credentials मध्ये दिलेली ID आहे
+
+    tools {
+        maven 'Maven-3.9.0' // Jenkins Maven tool name
+        jdk 'JDK-17'       // Jenkins JDK tool name
     }
+
+    environment {
+        SONAR_TOKEN = credentials('sonar-token-id') // Jenkins credentials id
+    }
+
     stages {
         stage('Checkout') {
-            steps { checkout scm }
+            steps {
+                git url: 'https://github.com/rohanrode02/banking-system.git', branch: 'main'
+            }
         }
 
         stage('Build & Test') {
             steps {
-                bat 'mvn -B clean package'  // Windows मध्ये bat वापर
+                bat 'mvn clean package'
             }
             post {
                 always {
-                    junit '**/target/surefire-reports/*.xml'
+                    junit 'target/surefire-reports/*.xml'
                     archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
                 }
             }
         }
 
-        stage('SonarQube Scan') {
+        stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
                     bat "mvn sonar:sonar -Dsonar.projectKey=banking-system -Dsonar.login=%SONAR_TOKEN%"
@@ -30,7 +39,9 @@ pipeline {
 
         stage('Quality Gate') {
             steps {
-                waitForQualityGate abortPipeline: true
+                timeout(time: 5, unit: 'MINUTES') { // 5 मिनिटांत status न आल्यास fail
+                    waitForQualityGate abortPipeline: true
+                }
             }
         }
     }
