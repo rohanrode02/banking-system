@@ -1,21 +1,16 @@
 pipeline {
     agent any
-
     environment {
-        MVN = 'Maven-3.9.9'  // Jenkins मध्ये configure केलेले Maven tool
-        SONAR_TOKEN = credentials('SONAR_TOKEN') // Jenkins credentials plugin मध्ये token configure केले
+        SONAR_TOKEN = credentials('sonar-token') // 'sonar-token' ही तुम्ही credentials मध्ये दिलेली ID आहे
     }
-
     stages {
         stage('Checkout') {
-            steps {
-                checkout scm
-            }
+            steps { checkout scm }
         }
 
         stage('Build & Test') {
             steps {
-                bat "${tool MVN}\\bin\\mvn.bat -B clean package"
+                bat 'mvn -B clean package'  // Windows मध्ये bat वापर
             }
             post {
                 always {
@@ -28,16 +23,14 @@ pipeline {
         stage('SonarQube Scan') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                    bat "${tool MVN}\\bin\\mvn.bat sonar:sonar -Dsonar.projectKey=banking-system -Dsonar.login=${SONAR_TOKEN}"
+                    bat "mvn sonar:sonar -Dsonar.projectKey=banking-system -Dsonar.login=%SONAR_TOKEN%"
                 }
             }
         }
 
         stage('Quality Gate') {
             steps {
-                timeout(time: 5, unit: 'MINUTES') {  // 5 मिनिटे वाट पाहा
-                    waitForQualityGate abortPipeline: true
-                }
+                waitForQualityGate abortPipeline: true
             }
         }
     }
