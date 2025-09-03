@@ -2,12 +2,12 @@ pipeline {
     agent any
 
     tools {
-        maven 'Maven-3.9.0' // Jenkins Maven tool name
-        jdk 'JDK-17'       // Jenkins JDK tool name
+        maven 'Maven-3.9.9' // Jenkins Maven tool name from Global Tool Config
+        jdk 'JDK17'          // Jenkins JDK tool name from Global Tool Config
     }
 
     environment {
-        SONAR_TOKEN = credentials('sonar-token-id') // Jenkins credentials id
+        SONAR_TOKEN = credentials('sonar-token-id')
     }
 
     stages {
@@ -39,7 +39,7 @@ pipeline {
 
         stage('Quality Gate') {
             steps {
-                timeout(time: 5, unit: 'MINUTES') { // 5 मिनिटांत status न आल्यास fail
+                timeout(time: 5, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
                 }
             }
