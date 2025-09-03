@@ -1,42 +1,38 @@
 pipeline {
-  agent any
-  environment {
-    // Jenkins मध्ये configure केलेले Maven tool name
-    maven 'Maven-3.9.9'
-  }
-  stages {
-    stage('Checkout') {
-      steps { checkout scm }
-    }
+    agent any
 
-    stage('Build & Test') {
-      steps {
-        withMaven(maven: "${MVN}") {
-          sh 'mvn -B clean package'   // Windows: use bat instead of sh
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
         }
-      }
-      post {
-        always {
-          junit '**/target/surefire-reports/*.xml'
-          archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-        }
-      }
-    }
 
-    stage('SonarQube Scan') {
-      steps {
-        // withSonarQubeEnv requires SonarQube server configured in Jenkins (Manage Jenkins -> Configure System)
-        withSonarQubeEnv('SonarQube') {
-          sh "mvn sonar:sonar -Dsonar.projectKey=banking-system -Dsonar.login=${SONAR_TOKEN}"
+        stage('Build & Test') {
+            steps {
+                // Windows users: use bat, Linux/Mac: use sh
+                bat 'mvn -B clean package'
+            }
+            post {
+                always {
+                    junit '**/target/surefire-reports/*.xml'
+                    archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                }
+            }
         }
-      }
-    }
 
-    stage('Quality Gate') {
-      steps {
-        // requires 'waitForQualityGate' step provided by Sonar Jenkins plugin
-        waitForQualityGate abortPipeline: true
-      }
+        stage('SonarQube Scan') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    bat "mvn sonar:sonar -Dsonar.projectKey=banking-system"
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+                waitForQualityGate abortPipeline: true
+            }
+        }
     }
-  }
 }
