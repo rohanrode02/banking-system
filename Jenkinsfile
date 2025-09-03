@@ -2,7 +2,7 @@ pipeline {
   agent any
   environment {
     // Jenkins मध्ये configure केलेले Maven tool name
-    MVN = "Maven-3.8.8"
+    maven 'Maven-3.9.9'
   }
   stages {
     stage('Checkout') {
