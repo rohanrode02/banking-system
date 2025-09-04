@@ -26,14 +26,17 @@ pipeline {
                 }
             }
         }
-        stage('Deploy to Tomcat') {
-            steps {
-                deploy adapters: [tomcat9(credentialsId: 'tomcat-cred-id',
-                                          path: '',
-                                          url: 'http://localhost:8091')],
-                       contextPath: '/banking-system',
-                       war: 'target/banking-system-0.0.1-SNAPSHOT.war'
-            }
-        }
+       stage('Deploy to Tomcat') {
+    steps {
+        deploy adapters: [
+            tomcat9(credentialsId: 'tomcat-cred-id', 
+                    path: '', 
+                    url: 'http://localhost:8091/')
+        ], 
+        contextPath: 'banking-system', 
+        war: 'target/banking-system.war'
+    }
+}
+
     }
 }
